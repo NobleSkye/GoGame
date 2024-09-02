@@ -1,0 +1,34 @@
+name: Build for All Platforms
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'  # Trigger the workflow on tags like v1.0.0
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        go-version: [1.20]
+        arch: [amd64, arm64]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: go-actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go-version }}
+
+      - name: Build for ${{ matrix.os }} ${{ matrix.arch }}
+        run: |
+          mkdir -p build
+          GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} go build -o build/${{ matrix.os }}-${{ matrix.arch }}/gogame
+          
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: go-builds
+          path: build/
